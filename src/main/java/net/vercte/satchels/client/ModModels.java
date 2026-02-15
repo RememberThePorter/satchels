@@ -1,6 +1,5 @@
 package net.vercte.satchels.client;
 
-import com.mojang.logging.LogUtils;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.neoforged.neoforge.client.event.ModelEvent;
@@ -27,7 +26,6 @@ public class ModModels {
         MODELS.forEach(m -> {
             BakedModel baked = bakedModels.get(m.getModelLocation());
             m.load(baked);
-            LogUtils.getLogger().info("model: {}, at {}", m, m.getModelLocation());
         });
     }
 
