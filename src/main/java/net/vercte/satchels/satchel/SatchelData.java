@@ -4,12 +4,19 @@ import com.mojang.logging.LogUtils;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.util.INBTSerializable;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.vercte.satchels.ModSounds;
+import net.vercte.satchels.ModTags;
 import net.vercte.satchels.network.packets.SatchelStatusPacketS2C;
 import org.jetbrains.annotations.NotNull;
+import top.theillusivec4.curios.api.CuriosApi;
+import top.theillusivec4.curios.api.type.capability.ICuriosItemHandler;
+
+import java.util.Optional;
 
 public class SatchelData implements INBTSerializable<CompoundTag> {
     public static final String KEY_SATCHEL = "satchels:satchel_data";
@@ -39,7 +46,11 @@ public class SatchelData implements INBTSerializable<CompoundTag> {
     }
 
     public boolean canAccess() {
-        return true;
+        // TODO: Seperate Curios compat
+        Optional<ICuriosItemHandler> optCuriosInventory = CuriosApi.getCuriosInventory(player);
+
+        if(optCuriosInventory.isEmpty()) return false;
+        return optCuriosInventory.get().isEquipped(s -> s.is(ModTags.SATCHEL));
     }
 
     // region Utilities
@@ -79,8 +90,21 @@ public class SatchelData implements INBTSerializable<CompoundTag> {
 
         if(!audible) return;
         float pitch = 0.9f + (player.getRandom().nextFloat() / 5);
-        if(to) player.playSound(ModSounds.SATCHEL_OPEN.get(), 0.5f, pitch);
-        else player.playSound(ModSounds.SATCHEL_CLOSE.get(), 0.5f, pitch);
+
+        Vec3 soundPos = player.position();
+        if(to) {
+            player.level().playSound(null,
+                    soundPos.x, soundPos.y, soundPos.z,
+                    ModSounds.SATCHEL_OPEN.get(), SoundSource.PLAYERS,
+                    0.5f, pitch
+            );
+        } else {
+            player.level().playSound(null,
+                    soundPos.x, soundPos.y, soundPos.z,
+                    ModSounds.SATCHEL_CLOSE.get(), SoundSource.PLAYERS,
+                    0.5f, pitch
+            );
+        }
     }
     // endregion
 
