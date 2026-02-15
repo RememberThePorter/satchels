@@ -22,6 +22,9 @@ import org.lwjgl.glfw.GLFW;
 public class SatchelsClient {
     public SatchelsClient(IEventBus modEventBus) {
         modEventBus.addListener(SatchelsClient::registerOverlays);
+        modEventBus.addListener(ModModels::onRegisterAdditional);
+        modEventBus.addListener(ModModels::onBakingCompleted);
+
         NeoForge.EVENT_BUS.addListener(SatchelsClient::endClientTick);
     }
 
