@@ -24,7 +24,7 @@ public enum SatchelsCompat {
 
     public static void initialize() {
         for(SatchelsCompat compat : values()) {
-            if(compat.entrypoint != null) compat.entrypoint.initialize();
+            if(compat.entrypoint != null && compat.isLoaded) compat.entrypoint.initialize();
         }
     }
 }

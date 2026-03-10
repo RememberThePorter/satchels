@@ -7,7 +7,7 @@ import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.RecipeBookMenu;
 import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.CraftingRecipe;
-import net.vercte.satchels.satchel.MenuWithSatchel;
+import net.vercte.satchels.api.MenuWithSatchel;
 import net.vercte.satchels.satchel.SatchelData;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

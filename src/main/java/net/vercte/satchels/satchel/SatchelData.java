@@ -82,7 +82,7 @@ public class SatchelData implements INBTSerializable<CompoundTag> {
         });
 
         if(player.containerMenu != player.inventoryMenu) {
-            player.inventoryMenu.slots.forEach(s -> {
+            player.containerMenu.slots.forEach(s -> {
                 if (s instanceof SatchelInventorySlot ss) ss.updateX();
             });
         }

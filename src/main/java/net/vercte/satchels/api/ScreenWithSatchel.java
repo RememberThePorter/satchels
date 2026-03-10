@@ -1,4 +1,4 @@
-package net.vercte.satchels.client.satchel;
+package net.vercte.satchels.api;
 
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
@@ -10,6 +10,10 @@ import net.vercte.satchels.client.animation.LerpFunctions;
 import net.vercte.satchels.client.animation.LerpHelper;
 import net.vercte.satchels.satchel.SatchelData;
 
+/**
+ * <p>A class that contains utilities for implementing the Satchel rendering (background, animation) into screens.</p>
+ * <p>This needs to be initialized, as it has animation data stored within.</p>
+ */
 public class ScreenWithSatchel {
     private float satchelYOffset = -1;
     private float yOffsetOnChange = 0;
@@ -17,6 +21,13 @@ public class ScreenWithSatchel {
     private long endTime = 0;
     private boolean lastState = false;
 
+    /**
+     * Render the satchel background.
+     * @param graphics The <code>GuiGraphics</code> passed to the render screen. Easily obtainable from <code>Screen#renderBg</code>.
+     * @param left The left edge of the background (when {@link SatchelData#getHotbarOffset()} is 0).
+     * @param top The position of the top edge of your screen.
+     * @param height The height of your screen.
+     */
     public void renderSatchelInventory(GuiGraphics graphics, int left, int top, int height) {
         Player player = Minecraft.getInstance().player;
         if(player == null) return;
@@ -52,23 +63,27 @@ public class ScreenWithSatchel {
 //        graphics.blitSprite(ResourceLocation.withDefaultNamespace("container/slot"), left + 151, top + 61, 18, 18);
 //    }
 
-    public static boolean hasClickedOutside(boolean original, double x, double y, int left, int top, int height) {
-        // Prevent it from ejecting items if we click the satchel portion
-        if(original) {
-            LocalPlayer player = Minecraft.getInstance().player;
-            if(player == null) return true;
+    /**
+     * Use to determine if a click is within the satchel.
+     * @param x The x-position of the mouse.
+     * @param y the y-position of the mouse.
+     * @param left The left edge of the bounds (when {@link SatchelData#getHotbarOffset()} is 0).
+     * @param top The position of the top edge of your screen.
+     * @param height The height of your screen.
+     */
+    public static boolean hasClickedOutside(double x, double y, int left, int top, int height) {
+        LocalPlayer player = Minecraft.getInstance().player;
+        if(player == null) return true;
 
-            SatchelData satchelData = SatchelData.get(player);
-            if(!satchelData.canAccess()) return true;
+        SatchelData satchelData = SatchelData.get(player);
+        if(!satchelData.canAccess()) return true;
 
-            int offset = satchelData.getHotbarOffset();
+        int offset = satchelData.getHotbarOffset();
 
-            int finalLeft = left + (offset * 18);
-            boolean clickedLeft = x < finalLeft;
-            boolean clickedRight = x >= finalLeft + 120;
-            boolean clickedBelow = y >= top + height + 26;
-            return clickedLeft || clickedRight || clickedBelow;
-        }
-        return false;
+        int finalLeft = left + (offset * 18);
+        boolean clickedLeft = x < finalLeft;
+        boolean clickedRight = x >= finalLeft + 120;
+        boolean clickedBelow = y >= top + height + 26;
+        return clickedLeft || clickedRight || clickedBelow;
     }
 }
