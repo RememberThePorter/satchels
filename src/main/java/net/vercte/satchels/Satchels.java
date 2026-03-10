@@ -20,6 +20,7 @@ public class Satchels {
 
         modEventBus.addListener(ModPackets::registerPayloadHandlers);
         modEventBus.addListener(SatchelsDataGeneration::gatherData);
+        modEventBus.addListener(SatchelsEventHooks::creativeTabBuild);
 
         SatchelsCompat.initialize();
     }

@@ -18,8 +18,9 @@ repositories {
 
 dependencies {
     // Curios
-    implementation "top.theillusivec4.curios:curios-neoforge:$curios_version+$minecraft_version"
+    compileOnly "top.theillusivec4.curios:curios-neoforge:$curios_version+$minecraft_version"
     compileOnly "top.theillusivec4.curios:curios-neoforge:$curios_version+$minecraft_version:api"
+    if(curios_enabled) runtimeOnly("top.theillusivec4.curios:curios-neoforge:$curios_version+$minecraft_version")
 }
 
 base {
