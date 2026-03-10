@@ -15,6 +15,14 @@ public class SoundGen extends SoundDefinitionsProvider {
 
     @Override
     public void registerSounds() {
+        add(ModSounds.SATCHEL_EQUIP, SoundDefinition.definition()
+                .with(
+                        sound("minecraft:item.armor.equip_leather", SoundDefinition.SoundType.EVENT)
+                                .volume(0.8f)
+                )
+                .subtitle("sound.satchels.satchel_rustle")
+        );
+
         add(ModSounds.SATCHEL_OPEN, SoundDefinition.definition()
                 .with(sound("satchels:satchel_open"))
                 .subtitle("sound.satchels.satchel_rustle")

@@ -9,6 +9,16 @@
     ],
     "subtitle": "sound.satchels.satchel_rustle"
   },
+  "satchel_equip": {
+    "sounds": [
+      {
+        "type": "event",
+        "name": "item.armor.equip_leather",
+        "volume": 0.8
+      }
+    ],
+    "subtitle": "sound.satchels.satchel_rustle"
+  },
   "satchel_open": {
     "sounds": [
       "satchels:satchel_open"

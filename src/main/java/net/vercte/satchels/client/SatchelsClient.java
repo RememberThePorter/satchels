@@ -10,8 +10,11 @@ import net.minecraft.client.renderer.entity.player.PlayerRenderer;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.config.ModConfig;
 import net.neoforged.jarjar.nio.util.Lazy;
+import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
@@ -21,13 +24,16 @@ import net.neoforged.neoforge.network.PacketDistributor;
 import net.vercte.satchels.Satchels;
 import net.vercte.satchels.client.model.SatchelLayer;
 import net.vercte.satchels.client.satchel.SatchelHotbarOverlay;
+import net.vercte.satchels.network.packets.SatchelOffsetUpdatePacketC2S;
 import net.vercte.satchels.network.packets.ToggleSatchelPacketC2S;
 import net.vercte.satchels.satchel.SatchelData;
 import org.lwjgl.glfw.GLFW;
 
 @Mod(value = Satchels.ID, dist = Dist.CLIENT)
 public class SatchelsClient {
-    public SatchelsClient(IEventBus modEventBus) {
+    public SatchelsClient(IEventBus modEventBus, ModContainer container) {
+        SatchelsClientConfig.load(modEventBus);
+
         modEventBus.addListener(SatchelsClient::registerOverlays);
 
         modEventBus.addListener(SatchelsClient::addEntityRenderLayers);
@@ -35,6 +41,10 @@ public class SatchelsClient {
         modEventBus.addListener(ModModels::onBakingCompleted);
 
         NeoForge.EVENT_BUS.addListener(SatchelsClient::endClientTick);
+        NeoForge.EVENT_BUS.addListener((ClientPlayerNetworkEvent.LoggingIn e) -> sendSatchelStatus());
+        NeoForge.EVENT_BUS.addListener(SatchelsClient::onPlayerRespawn);
+
+        container.registerConfig(ModConfig.Type.CLIENT, SatchelsClientConfig.SPEC);
     }
 
     public static final Lazy<KeyMapping> KEYMAPPING_TOGGLE_SATCHEL = Lazy.of(
@@ -65,5 +75,17 @@ public class SatchelsClient {
                 playerRenderer.addLayer(new SatchelLayer<>(playerRenderer, itemRenderer));
             }
         }
+    }
+
+    public static void sendSatchelStatus() {
+        int satchelOffset = SatchelsClientConfig.getSatchelOffset();
+        PacketDistributor.sendToServer(new SatchelOffsetUpdatePacketC2S(satchelOffset));
+    }
+
+    public static void onPlayerRespawn(final ClientPlayerNetworkEvent.Clone event) {
+        Player player = event.getPlayer();
+        if(!player.isLocalPlayer()) return;
+
+        sendSatchelStatus();
     }
 }

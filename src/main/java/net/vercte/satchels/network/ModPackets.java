@@ -5,6 +5,7 @@ import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.HandlerThread;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 import net.vercte.satchels.client.ClientPacketHandler;
+import net.vercte.satchels.network.packets.SatchelOffsetUpdatePacketC2S;
 import net.vercte.satchels.network.packets.SatchelStatusPacketS2C;
 import net.vercte.satchels.network.packets.ToggleSatchelPacketC2S;
 
@@ -18,11 +19,11 @@ public class ModPackets {
                 (p, cx) -> ToggleSatchelPacketC2S.handle(p, (ServerPlayer) cx.player())
         );
 
-//        registrar.playToServer(
-//                ClientConfigUpdatePacketC2S.TYPE,
-//                ClientConfigUpdatePacketC2S.STREAM_CODEC,
-//                (p, cx) -> ClientConfigUpdatePacketC2S.handle(p, (ServerPlayer) cx.player())
-//        );
+        registrar.playToServer(
+                SatchelOffsetUpdatePacketC2S.TYPE,
+                SatchelOffsetUpdatePacketC2S.STREAM_CODEC,
+                (p, cx) -> SatchelOffsetUpdatePacketC2S.handle(p, (ServerPlayer) cx.player())
+        );
 
         registrar.playToClient(
                 SatchelStatusPacketS2C.TYPE,

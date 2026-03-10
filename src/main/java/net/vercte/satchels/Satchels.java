@@ -4,7 +4,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.common.NeoForge;
-import net.vercte.satchels.compat.curios.CuriosEvents;
+import net.vercte.satchels.compat.SatchelsCompat;
 import net.vercte.satchels.network.ModPackets;
 import net.vercte.satchels.util.SatchelsDataGeneration;
 
@@ -21,9 +21,7 @@ public class Satchels {
         modEventBus.addListener(ModPackets::registerPayloadHandlers);
         modEventBus.addListener(SatchelsDataGeneration::gatherData);
 
-        // TODO: Separate Compat
-        NeoForge.EVENT_BUS.addListener(CuriosEvents::canUnequipSatchel);
-        NeoForge.EVENT_BUS.addListener(CuriosEvents::curioChangeMaybeSatchel);
+        SatchelsCompat.initialize();
     }
 
     public static ResourceLocation at(String path) {

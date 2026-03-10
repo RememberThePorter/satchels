@@ -10,13 +10,10 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.util.INBTSerializable;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.vercte.satchels.ModSounds;
-import net.vercte.satchels.ModTags;
+import net.vercte.satchels.api.SatchelAccess;
+import net.vercte.satchels.client.SatchelsClientConfig;
 import net.vercte.satchels.network.packets.SatchelStatusPacketS2C;
 import org.jetbrains.annotations.NotNull;
-import top.theillusivec4.curios.api.CuriosApi;
-import top.theillusivec4.curios.api.type.capability.ICuriosItemHandler;
-
-import java.util.Optional;
 
 public class SatchelData implements INBTSerializable<CompoundTag> {
     public static final String KEY_SATCHEL = "satchels:satchel_data";
@@ -34,6 +31,10 @@ public class SatchelData implements INBTSerializable<CompoundTag> {
         this.player = player;
         this.satchelInventory = new SatchelInventory(this);
         this.hotbarOffset = 0;
+
+        if(player.isLocalPlayer()) {
+            this.hotbarOffset = SatchelsClientConfig.getSatchelOffset();
+        }
     }
 
     public static SatchelData get(Player player) {
@@ -46,11 +47,7 @@ public class SatchelData implements INBTSerializable<CompoundTag> {
     }
 
     public boolean canAccess() {
-        // TODO: Seperate Curios compat
-        Optional<ICuriosItemHandler> optCuriosInventory = CuriosApi.getCuriosInventory(player);
-
-        if(optCuriosInventory.isEmpty()) return false;
-        return optCuriosInventory.get().isEquipped(s -> s.is(ModTags.SATCHEL));
+        return SatchelAccess.CAN_ACCESS_PREDICATES.stream().anyMatch(p -> p.test(player));
     }
 
     // region Utilities
@@ -79,6 +76,16 @@ public class SatchelData implements INBTSerializable<CompoundTag> {
 
     public void setHotbarOffset(int hotbarOffset) {
         this.hotbarOffset = hotbarOffset;
+
+        player.inventoryMenu.slots.forEach(s -> {
+            if (s instanceof SatchelInventorySlot ss) ss.updateX();
+        });
+
+        if(player.containerMenu != player.inventoryMenu) {
+            player.inventoryMenu.slots.forEach(s -> {
+                if (s instanceof SatchelInventorySlot ss) ss.updateX();
+            });
+        }
     }
 
     public boolean isActive() {
@@ -96,13 +103,13 @@ public class SatchelData implements INBTSerializable<CompoundTag> {
             player.level().playSound(null,
                     soundPos.x, soundPos.y, soundPos.z,
                     ModSounds.SATCHEL_OPEN.get(), SoundSource.PLAYERS,
-                    0.5f, pitch
+                    1, pitch
             );
         } else {
             player.level().playSound(null,
                     soundPos.x, soundPos.y, soundPos.z,
                     ModSounds.SATCHEL_CLOSE.get(), SoundSource.PLAYERS,
-                    0.5f, pitch
+                    1, pitch
             );
         }
     }
