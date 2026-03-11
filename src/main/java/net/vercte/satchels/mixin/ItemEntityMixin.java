@@ -17,7 +17,7 @@ public class ItemEntityMixin {
 
         // if satchel is enabled, prioritize adding to that first
         if(satchelData.isActive()) {
-            return satchelData.getSatchelInventory().add(stack) || original.call(inventory, stack);
+            return satchelData.getSatchelInventory().pickup(stack) || original.call(inventory, stack);
         }
 
         // otherwise, prioritize adding to the inventory first

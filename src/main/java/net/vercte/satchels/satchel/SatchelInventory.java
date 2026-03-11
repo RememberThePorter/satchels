@@ -11,6 +11,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.Container;
 import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -96,6 +97,45 @@ public class SatchelInventory implements Container, INBTSerializable<CompoundTag
                 this.items.set(i, ItemStack.EMPTY);
             }
         }
+    }
+
+    public boolean pickup(ItemStack stack) {
+        Inventory inventory = this.parent.getPlayer().getInventory();
+
+        int toInsert = stack.getCount();
+        for(ItemStack current : this.items) {
+            if(!current.isEmpty() && stackCanFitMore(current, stack)) {
+                int inserted = Math.min(stack.getMaxStackSize() - stack.getCount(), toInsert);
+                toInsert -= inserted;
+
+                stack.shrink(inserted);
+
+                current.setCount(current.getCount() + inserted);
+                current.setPopTime(5);
+                if(toInsert == 0) return true;
+            }
+        }
+
+        for(int i = 0; i < this.parent.getHotbarOffset(); i++) {
+            ItemStack current = inventory.items.get(i);
+            if(current.isEmpty()) {
+                inventory.items.set(i, stack.copyAndClear());
+                inventory.items.get(i).setPopTime(5);
+                return true;
+            } else if(stackCanFitMore(current, stack)) {
+                int inserted = Math.min(stack.getMaxStackSize() - stack.getCount(), toInsert);
+                toInsert -= inserted;
+
+                stack.shrink(inserted);
+
+                current.setCount(current.getCount() + inserted);
+                current.setPopTime(5);
+                if(toInsert == 0) return true;
+            }
+        }
+
+        if(toInsert > 0) return add(stack);
+        return false;
     }
 
     public boolean add(ItemStack stack) {
