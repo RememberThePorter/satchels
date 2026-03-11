@@ -17,9 +17,9 @@ public class GiveCommandMixin {
     private static boolean prioritizeSatchel(Inventory inventory, ItemStack stack, Operation<Boolean> original, @Local ServerPlayer player) {
         SatchelData satchelData = SatchelData.get(player);
         if(satchelData.isActive()) {
-            return satchelData.getSatchelInventory().add(stack) || original.call(inventory, stack);
+            return satchelData.getSatchelInventory().pickup(stack) || original.call(inventory, stack);
         }
 
-        return original.call(inventory, stack) || (satchelData.canAccess() && satchelData.getSatchelInventory().add(stack));
+        return original.call(inventory, stack) || (satchelData.canAccess() && satchelData.getSatchelInventory().pickup(stack));
     }
 }

@@ -21,6 +21,6 @@ public class ItemEntityMixin {
         }
 
         // otherwise, prioritize adding to the inventory first
-        return original.call(inventory, stack) || (satchelData.canAccess() && satchelData.getSatchelInventory().add(stack));
+        return original.call(inventory, stack) || (satchelData.canAccess() && satchelData.getSatchelInventory().pickup(stack));
     }
 }

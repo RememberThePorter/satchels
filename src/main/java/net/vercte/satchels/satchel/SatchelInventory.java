@@ -1,9 +1,6 @@
 package net.vercte.satchels.satchel;
 
 import com.mojang.logging.LogUtils;
-import net.minecraft.CrashReport;
-import net.minecraft.CrashReportCategory;
-import net.minecraft.ReportedException;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
@@ -13,11 +10,11 @@ import net.minecraft.world.Container;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.common.util.INBTSerializable;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class SatchelInventory implements Container, INBTSerializable<CompoundTag> {
@@ -102,121 +99,50 @@ public class SatchelInventory implements Container, INBTSerializable<CompoundTag
     public boolean pickup(ItemStack stack) {
         Inventory inventory = this.parent.getPlayer().getInventory();
 
-        int toInsert = stack.getCount();
-        for(ItemStack current : this.items) {
-            if(!current.isEmpty() && stackCanFitMore(current, stack)) {
-                int inserted = Math.min(stack.getMaxStackSize() - stack.getCount(), toInsert);
-                toInsert -= inserted;
+        int offset = parent.getHotbarOffset();
+        int right = parent.getHotbarOffset() + 6;
 
-                stack.shrink(inserted);
+        List<ItemStack> kindaHotbar = new ArrayList<>();
+        for(int i = 0; i < offset; i++) kindaHotbar.add(inventory.getItem(i)); // uncovered left side of hotbar
+        kindaHotbar.addAll(this.items);
+        for(int i = right; i < 9; i++) kindaHotbar.add(inventory.getItem(i)); // uncovered right side of hotbar
 
-                current.setCount(current.getCount() + inserted);
-                current.setPopTime(5);
-                if(toInsert == 0) return true;
-            }
-        }
+        boolean success = addToInventory(stack, kindaHotbar);
 
-        for(int i = 0; i < this.parent.getHotbarOffset(); i++) {
-            ItemStack current = inventory.items.get(i);
-            if(current.isEmpty()) {
-                inventory.items.set(i, stack.copyAndClear());
-                inventory.items.get(i).setPopTime(5);
-                return true;
-            } else if(stackCanFitMore(current, stack)) {
-                int inserted = Math.min(stack.getMaxStackSize() - stack.getCount(), toInsert);
-                toInsert -= inserted;
+        for(int i = 0; i < offset; i++) inventory.items.set(i, kindaHotbar.get(i)); // uncovered left side of hotbar
+        for(int i = offset; i < right; i++) this.items.set(i-offset, kindaHotbar.get(i));
+        for(int i = right; i < 9; i++) inventory.items.set(i, kindaHotbar.get(i));
 
-                stack.shrink(inserted);
-
-                current.setCount(current.getCount() + inserted);
-                current.setPopTime(5);
-                if(toInsert == 0) return true;
-            }
-        }
-
-        if(toInsert > 0) return add(stack);
-        return false;
+        return success;
     }
 
-    public boolean add(ItemStack stack) {
-        return this.add(-1, stack);
-    }
-
-    public boolean add(int slot, ItemStack stack) {
-        if (stack.isEmpty()) {
-            return false;
+    public boolean addToInventory(ItemStack ins, List<ItemStack> items) {
+        int availableSlot = getSlotWithRemainingSpace(ins, items);
+        if(availableSlot != -1) {
+            addAt(availableSlot, ins, items);
         } else {
-            Player player = this.parent.getPlayer();
-            try {
-                if (stack.isDamaged()) {
-                    if (slot == -1) {
-                        slot = this.getFreeSlot();
-                    }
-
-                    if (slot >= 0) {
-                        this.items.set(slot, stack.copyAndClear());
-                        this.items.get(slot).setPopTime(5);
-                        return true;
-                    } else if (player.hasInfiniteMaterials()) {
-                        stack.setCount(0);
-                        return true;
-                    } else {
-                        return false;
-                    }
-                } else {
-                    int count;
-                    do {
-                        count = stack.getCount();
-                        if (slot == -1) {
-                            stack.setCount(this.addResource(stack));
-                        } else {
-                            stack.setCount(this.addResource(slot, stack));
-                        }
-                    } while (!stack.isEmpty() && stack.getCount() < count);
-
-                    if (stack.getCount() == count && player.hasInfiniteMaterials()) {
-                        stack.setCount(0);
-                        return true;
-                    } else {
-                        return stack.getCount() < count;
-                    }
-                }
-            } catch (Throwable var6) {
-                CrashReport crashReport = CrashReport.forThrowable(var6, "net.vercte.satchels: Adding item to satchel inventory");
-                CrashReportCategory crashReportCategory = crashReport.addCategory("Item being added");
-                crashReportCategory.setDetail("Item ID", Item.getId(stack.getItem()));
-                crashReportCategory.setDetail("Item data", stack.getDamageValue());
-                crashReportCategory.setDetail("Item name", () -> stack.getHoverName().getString());
-                throw new ReportedException(crashReport);
+            for(int i = 0; i < items.size(); i++) {
+                addAt(i, ins, items);
+                if(ins.getCount() == 0) return true;
             }
+            return false;
         }
+        if(ins.getCount() > 0) return addToInventory(ins, items);
+        return true;
     }
 
-    private int addResource(ItemStack itemStack) {
-        int slot = this.getSlotWithRemainingSpace(itemStack);
-        if (slot == -1) {
-            slot = this.getFreeSlot();
-        }
+    public void addAt(int slot, ItemStack ins, List<ItemStack> items) {
+        ItemStack original = items.get(slot);
+        if(original.isEmpty()) {
+            items.set(slot, ins.copyAndClear());
+            items.get(slot).setPopTime(5);
+        } else if(stackCanFitMore(original, ins)) {
+            int inserted = Math.min(original.getMaxStackSize() - original.getCount(), ins.getCount());
+            ins.shrink(inserted);
 
-        return slot == -1 ? itemStack.getCount() : this.addResource(slot, itemStack);
-    }
-
-    private int addResource(int slot, ItemStack itemStack) {
-        int count = itemStack.getCount();
-        ItemStack containedItem = this.getItem(slot);
-        if (containedItem.isEmpty()) {
-            containedItem = itemStack.copyWithCount(0);
-            this.setItem(slot, containedItem);
+            original.setCount(original.getCount() + inserted);
+            original.setPopTime(5);
         }
-
-        int max = this.getMaxStackSize(containedItem) - containedItem.getCount();
-        int added = Math.min(count, max);
-        if (added != 0) {
-            count -= added;
-            containedItem.grow(added);
-            containedItem.setPopTime(5);
-        }
-        return count;
     }
 
     public void dropAll(boolean died) {
@@ -231,7 +157,7 @@ public class SatchelInventory implements Container, INBTSerializable<CompoundTag
 
     public boolean placeItemBackInInventory(ItemStack inserted) {
         while(!inserted.isEmpty()) {
-            int slot = this.getSlotWithRemainingSpace(inserted);
+            int slot = this.getSlotWithRemainingSpace(inserted, items);
             if (slot == -1) {
                 slot = this.getFreeSlot();
             }
@@ -239,17 +165,17 @@ public class SatchelInventory implements Container, INBTSerializable<CompoundTag
             if (slot == -1) break;
 
             int j = inserted.getMaxStackSize() - this.getItem(slot).getCount();
-            this.add(slot, inserted.split(j));
+            this.addAt(slot, inserted.split(j), items);
         }
         return inserted.isEmpty();
     }
 
-    public int getSlotWithRemainingSpace(ItemStack inserted) {
+    public int getSlotWithRemainingSpace(ItemStack inserted, List<ItemStack> items) {
         int selected = getSelectedSlot();
         if(selected != -1 && stackCanFitMore(items.get(selected), inserted)) return selected;
 
-        for(int i = 0; i < this.items.size(); i++) {
-            ItemStack here = this.items.get(i);
+        for(int i = 0; i < items.size(); i++) {
+            ItemStack here = items.get(i);
             if(this.stackCanFitMore(here, inserted)) return i;
         }
         return -1;
