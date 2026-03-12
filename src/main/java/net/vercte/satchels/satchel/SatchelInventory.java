@@ -1,6 +1,5 @@
 package net.vercte.satchels.satchel;
 
-import com.mojang.logging.LogUtils;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.component.DataComponents;
@@ -220,17 +219,26 @@ public class SatchelInventory implements Container, INBTSerializable<CompoundTag
 
         return -1;
     }
+
+    public int findSlotMatchingItem(ItemStack searchingFor) {
+        for (int i = 0; i < this.items.size(); i++) {
+            ItemStack found = this.items.get(i);
+            if (!found.isEmpty() && ItemStack.isSameItemSameComponents(searchingFor, found)) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
     // endregion
 
     // region Serialization
     @Override
     public CompoundTag serializeNBT(@NotNull HolderLookup.Provider provider) {
         ListTag listTag = new ListTag();
-        LogUtils.getLogger().info("Saving the satchel");
 
         for(int i = 0; i < this.items.size(); i++) {
             ItemStack slotContent = this.items.get(i);
-            LogUtils.getLogger().info("stack: {}", slotContent);
             if (!slotContent.isEmpty()) {
                 CompoundTag itemTag = new CompoundTag();
                 itemTag.putInt(KEY_SLOT, i);

@@ -4,13 +4,18 @@ import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
+import net.minecraft.core.NonNullList;
 import net.minecraft.world.Container;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.network.PacketDistributor;
+import net.vercte.satchels.network.packets.ToggleSatchelPacketC2S;
 import net.vercte.satchels.satchel.SatchelData;
+import net.vercte.satchels.satchel.SatchelInventory;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -29,6 +34,13 @@ public abstract class InventoryMixin {
 
     @Shadow
     public int selected;
+
+    @Shadow
+    public abstract int getSuitableHotbarSlot();
+
+    @Shadow
+    @Final
+    public NonNullList<ItemStack> items;
 
     @ModifyReturnValue(method = "getSelected", at = @At("RETURN"))
     public ItemStack getSelected(ItemStack original) {
@@ -87,5 +99,37 @@ public abstract class InventoryMixin {
         SatchelData.get(this.player)
                 .getSatchelInventory()
                 .removeItem(stack);
+    }
+
+    @Inject(method = "pickSlot", at = @At("HEAD"), cancellable = true)
+    public void putIntoSatchelIfActive(int slot, CallbackInfo ci) {
+        SatchelData data = SatchelData.get(this.player);
+        SatchelInventory satchelInventory = data.getSatchelInventory();
+        if(!data.isActive()) return;
+
+        int inventorySuitable = this.getSuitableHotbarSlot();
+        int satchelSuitable = satchelInventory.getFreeSlot();
+
+        if(!data.isSlotInSatchel(inventorySuitable) && (inventorySuitable < satchelSuitable + data.getHotbarOffset() || satchelSuitable == -1)) return;
+        if(satchelSuitable == -1 && inventorySuitable != -1 && !data.isSlotInSatchel(inventorySuitable)) return;
+
+        if(satchelSuitable != -1) this.selected = satchelSuitable + data.getHotbarOffset();
+        int satchelSelected = data.convertToSatchelIndex(this.selected);
+
+        ItemStack held = satchelInventory.getItem(satchelSelected);
+
+        satchelInventory.setItem(satchelSelected, this.items.get(slot));
+        this.items.set(slot, held);
+        ci.cancel();
+    }
+
+    @Inject(method = "setPickedItem", at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/player/Inventory;selected:I", opcode = Opcodes.PUTFIELD, shift = At.Shift.AFTER))
+    public void deselectSatchelIfNeeded(CallbackInfo ci) {
+        SatchelData data = SatchelData.get(this.player);
+        if(!data.isSlotInSatchel(this.selected)) return;
+
+        if(!data.isActive()) return;
+        data.setActive(false, true);
+        PacketDistributor.sendToServer(new ToggleSatchelPacketC2S(false));
     }
 }
