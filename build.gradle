@@ -10,9 +10,13 @@ group = mod_group_id
 
 repositories {
     mavenLocal()
-    maven {
-        name = "Curios"
+    maven { // Curios
+        name = "Illusive Soulworks"
         url = "https://maven.theillusivec4.top/"
+    }
+    maven { // JEI
+        name = "Jared's maven"
+        url = "https://maven.blamejared.com/"
     }
 }
 
@@ -21,6 +25,9 @@ dependencies {
     compileOnly "top.theillusivec4.curios:curios-neoforge:$curios_version+$minecraft_version"
     compileOnly "top.theillusivec4.curios:curios-neoforge:$curios_version+$minecraft_version:api"
     if(curios_enabled) runtimeOnly("top.theillusivec4.curios:curios-neoforge:$curios_version+$minecraft_version")
+
+    compileOnly "mezz.jei:jei-$minecraft_version-neoforge-api:$jei_version"
+    if(jei_enabled) runtimeOnly "mezz.jei:jei-$minecraft_version-neoforge:$jei_version"
 }
 
 base {

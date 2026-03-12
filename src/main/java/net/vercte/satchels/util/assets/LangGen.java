@@ -17,5 +17,9 @@ public class LangGen extends LanguageProvider {
         addTag(() -> ModTags.SATCHEL, "Satchels");
         add("key.satchels.toggle_satchel", "Toggle Satchel");
         add("sound.satchels.satchel_rustle", "Satchel Rustles");
+
+        add("satchels.options.offset", "Satchel Position");
+        add("satchels.options.offset.tooltip", "The position of the Satchel on your hotbar.");
+        add("satchels.options.offset.selection", "Slots %s-%s");
     }
 }

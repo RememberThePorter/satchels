@@ -1,5 +1,6 @@
 # TODO
 - [ ] allow usage with emi/jei
+- [ ] controls menu settings
 - [ ] toggle behaviour in creative menu (glup...)
 - [ ] Pick block doesn't work with the satchel hotbar (ulp...)
 

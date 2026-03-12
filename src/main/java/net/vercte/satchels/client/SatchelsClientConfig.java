@@ -1,6 +1,8 @@
 package net.vercte.satchels.client;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.OptionInstance;
+import net.minecraft.network.chat.Component;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.config.ModConfigEvent;
@@ -26,11 +28,30 @@ public class SatchelsClientConfig {
     static final ModConfigSpec SPEC = BUILDER.build();
     // endregion
 
+    // region Controls Hook
+    private static final OptionInstance<Integer> offsetOption = new OptionInstance<>(
+            "satchels.options.offset",
+            OptionInstance.cachedConstantTooltip(Component.translatable("satchels.options.offset.tooltip")),
+            (c, v) -> Component.translatable("satchels.options.offset.selection", v+1, v+6),
+            new OptionInstance.ClampingLazyMaxIntRange(0, () -> 3, 3),
+            0,
+            v -> {
+                SATCHEL_OFFSET.set(v);
+                SATCHEL_OFFSET.save();
+            }
+    );
+
+    public static OptionInstance<Integer> getOffsetOption() {
+        return offsetOption;
+    }
+    // endregion
+
     private static void onConfigUpdate(final ModConfigEvent event) {
         satchelOffset = SATCHEL_OFFSET.get();
+        offsetOption.set(satchelOffset);
 
         if(event.getConfig().getType() == ModConfig.Type.CLIENT && Minecraft.getInstance().getConnection() != null) {
-            SatchelData.get(Minecraft.getInstance().player).setHotbarOffset(getSatchelOffset());
+            SatchelData.get(Minecraft.getInstance().player).setHotbarOffset(satchelOffset);
             PacketDistributor.sendToServer(new SatchelOffsetUpdatePacketC2S(satchelOffset));
         }
     }
