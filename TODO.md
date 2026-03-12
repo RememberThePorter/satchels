@@ -1,5 +1,5 @@
 # TODO
-- [ ] change chest shift-click logic with the satchel (don't make it shift-click into the satchel)
+- [ ] allow usage with emi/jei
 - [ ] toggle behaviour in creative menu (glup...)
 - [ ] Pick block doesn't work with the satchel hotbar (ulp...)
 
@@ -10,4 +10,5 @@
   - shift-click in chests needs to be changed. also maybe shift+(hotbar key) in menus for inputting into the satchel?
 - [x] implement into crafting screens
 - [x] Projectiles don't get taken from the Satchel (arrows for bows)
-- [x] allow usage with recipe book/emi/jei
+- [x] allow usage with recipe book
+- [x] change chest shift-click logic with the satchel (don't make it shift-click into the satchel)
