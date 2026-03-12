@@ -7,6 +7,7 @@
   "mixins": [
     "GiveCommandMixin",
     "ItemEntityMixin",
+    "ServerPlaceRecipeMixin",
     "compat.curios.CuriosMenuMixin",
     "menu.BeaconMenuMixin",
     "menu.ChestMenuMixin",
@@ -23,6 +24,7 @@
     "screen.AbstractContainerScreenMixin",
     "screen.CreativeModeInventoryScreenMixin",
     "screen.InventoryScreenMixin",
+    "screen.RecipeBookComponentMixin",
     "screen.SimpleWorkbenchScreenMixin",
     "screen.WorkbenchOverridesClickedOutsideScreenMixin"
   ],

@@ -3,6 +3,7 @@ package net.vercte.satchels.satchel;
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -10,6 +11,8 @@ import net.minecraft.world.Container;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.StackedContents;
+import net.minecraft.world.inventory.StackedContentsCompatible;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.common.util.INBTSerializable;
 import org.jetbrains.annotations.NotNull;
@@ -17,7 +20,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SatchelInventory implements Container, INBTSerializable<CompoundTag> {
+public class SatchelInventory implements Container, INBTSerializable<CompoundTag>, StackedContentsCompatible {
     private final String KEY_ITEMS = "Items";
     private final String KEY_SLOT = "Slot";
     private final int SATCHEL_SIZE = 6;
@@ -79,7 +82,9 @@ public class SatchelInventory implements Container, INBTSerializable<CompoundTag
     }
 
     @Override
-    public void setChanged() {}
+    public void setChanged() {
+        this.parent.getPlayer().getInventory().setChanged();
+    }
 
     @Override
     public boolean stillValid(@NotNull Player player) {
@@ -200,6 +205,21 @@ public class SatchelInventory implements Container, INBTSerializable<CompoundTag
         if(this.parent.isSlotInSatchel(invSelected)) return this.parent.convertToSatchelIndex(invSelected);
         return -1;
     }
+
+    public int findSlotMatchingUnusedItem(ItemStack searchingFor) {
+        for (int i = 0; i < this.items.size(); i++) {
+            ItemStack found = this.items.get(i);
+            if (!found.isEmpty()
+                    && ItemStack.isSameItemSameComponents(searchingFor, found)
+                    && !found.isDamaged()
+                    && !found.isEnchanted()
+                    && !found.has(DataComponents.CUSTOM_NAME)) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
     // endregion
 
     // region Serialization
@@ -244,6 +264,15 @@ public class SatchelInventory implements Container, INBTSerializable<CompoundTag
         List<ItemStack> newItems = ItemStack.OPTIONAL_LIST_STREAM_CODEC.decode(byteBuf);
         for(int i = 0; i < this.items.size(); i++) {
             this.items.set(i, newItems.get(i));
+        }
+    }
+    // endregion
+
+    // region StackedContentsCompatible
+    @Override
+    public void fillStackedContents(@NotNull StackedContents contents) {
+        for (ItemStack itemstack : this.items) {
+            contents.accountSimpleStack(itemstack);
         }
     }
     // endregion
