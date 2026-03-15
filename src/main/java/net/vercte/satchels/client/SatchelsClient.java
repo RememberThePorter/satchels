@@ -37,8 +37,6 @@ public class SatchelsClient {
         modEventBus.addListener(SatchelsClient::registerOverlays);
 
         modEventBus.addListener(SatchelsClient::addEntityRenderLayers);
-        modEventBus.addListener(ModModels::onRegisterAdditional);
-        modEventBus.addListener(ModModels::onBakingCompleted);
 
         NeoForge.EVENT_BUS.addListener(SatchelsClient::endClientTick);
         NeoForge.EVENT_BUS.addListener((ClientPlayerNetworkEvent.LoggingIn e) -> sendSatchelStatus());

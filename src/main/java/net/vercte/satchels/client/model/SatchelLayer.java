@@ -8,19 +8,15 @@ import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
-import net.vercte.satchels.ModItems;
 import net.vercte.satchels.api.SatchelAccess;
-import net.vercte.satchels.client.ModModels;
 import org.jetbrains.annotations.NotNull;
 
 public class SatchelLayer<T extends LivingEntity, M extends EntityModel<T>> extends RenderLayer<T, M> {
     private final ItemRenderer itemRenderer;
-    private ItemStack satchelStack = ItemStack.EMPTY;
 
     public SatchelLayer(RenderLayerParent<T, M> renderLayerParent, ItemRenderer itemRenderer) {
         super(renderLayerParent);
@@ -33,9 +29,6 @@ public class SatchelLayer<T extends LivingEntity, M extends EntityModel<T>> exte
 
         if(!SatchelAccess.satchelIsVisible(player)) return;
 
-        BakedModel satchelModel = ModModels.SATCHEL_LAYER.get();
-        if(satchelStack.isEmpty()) satchelStack = ModItems.SATCHEL.toStack();
-
         M entityModel = getParentModel();
         if (!(entityModel instanceof HumanoidModel<?> model))
             return;
@@ -44,9 +37,21 @@ public class SatchelLayer<T extends LivingEntity, M extends EntityModel<T>> exte
 
         model.body.translateAndRotate(poseStack);
         poseStack.translate(0, 4/16f, 0);
-        poseStack.scale(1, -1, -1);
+        poseStack.scale(-1, -1, 1);
 
-        itemRenderer.render(satchelStack, ItemDisplayContext.NONE, false, poseStack, buffer, light, OverlayTexture.NO_OVERLAY, satchelModel);
+        ItemStack satchelStack = SatchelAccess.getSatchelStack(player);
+        itemRenderer.renderStatic(
+                player,
+                satchelStack,
+                ItemDisplayContext.HEAD,
+                false,
+                poseStack,
+                buffer,
+                player.level(),
+                light,
+                OverlayTexture.NO_OVERLAY,
+                0
+        );
 
         poseStack.popPose();
     }

@@ -15,19 +15,37 @@ import top.theillusivec4.curios.api.CuriosApi;
 import top.theillusivec4.curios.api.event.CurioCanUnequipEvent;
 import top.theillusivec4.curios.api.event.CurioChangeEvent;
 import top.theillusivec4.curios.api.type.capability.ICuriosItemHandler;
+import top.theillusivec4.curios.api.type.inventory.ICurioStacksHandler;
 import top.theillusivec4.curios.api.type.inventory.IDynamicStackHandler;
 
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class CuriosCompat implements CompatEntrypoint {
     @Override
     public void initialize() {
         SatchelAccess.CAN_ACCESS_PREDICATES.add(this::playerCanAccessSatchel);
         SatchelAccess.IS_VISIBLE_PREDICATES.add(this::playerSatchelIsVisible);
+        SatchelAccess.SATCHEL_STACK_GETTERS.add(this::getSatchelStack);
 
         NeoForge.EVENT_BUS.addListener(this::canUnequipSatchel);
         NeoForge.EVENT_BUS.addListener(this::curioChangeMaybeSatchel);
+    }
+
+    public ItemStack getSatchelStack(Player player) {
+        Optional<ICuriosItemHandler> optCuriosInventory = CuriosApi.getCuriosInventory(player);
+        if(optCuriosInventory.isEmpty()) return ItemStack.EMPTY;
+
+        for(ICurioStacksHandler handler: optCuriosInventory.get().getCurios().values()) {
+            IDynamicStackHandler stacks = handler.getStacks();
+            for(int i = 0; i < stacks.getSlots(); i++) {
+                ItemStack current = stacks.getStackInSlot(i);
+                if(current.isEmpty()) continue;
+                if(!current.is(ModTags.SATCHEL)) continue;
+                return current;
+            }
+        }
+
+        return ItemStack.EMPTY;
     }
 
     public boolean playerCanAccessSatchel(Player player) {
@@ -41,22 +59,21 @@ public class CuriosCompat implements CompatEntrypoint {
         Optional<ICuriosItemHandler> optCuriosInventory = CuriosApi.getCuriosInventory(player);
 
         if(optCuriosInventory.isEmpty()) return false;
-        AtomicBoolean renders = new AtomicBoolean(false);
-        optCuriosInventory.get().getCurios().forEach((s, c) -> {
-            IDynamicStackHandler stackHandler = c.getStacks();
 
-            for(int i = 0; i < stackHandler.getSlots(); i++) {
-                ItemStack stack = stackHandler.getStackInSlot(i);
+        for(ICurioStacksHandler handler: optCuriosInventory.get().getCurios().values()) {
+            IDynamicStackHandler stacks = handler.getStacks();
+            for(int i = 0; i < stacks.getSlots(); i++) {
+                ItemStack current = stacks.getStackInSlot(i);
+                if(current.isEmpty()) continue;
+                if(!current.is(ModTags.SATCHEL)) continue;
 
-                if(stack.isEmpty()) return;
-                if(!stack.is(ModTags.SATCHEL)) return;
-                NonNullList<Boolean> renderStates = c.getRenders();
+                NonNullList<Boolean> renderStates = handler.getRenders();
                 boolean renderable = renderStates.size() > i && renderStates.get(i);
-                if(renderable) renders.set(true);
+                if(renderable) return true;
             }
-        });
+        }
 
-        return renders.get();
+        return false;
     }
 
     public void canUnequipSatchel(final CurioCanUnequipEvent event) {

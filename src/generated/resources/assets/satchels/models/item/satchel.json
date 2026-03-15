@@ -1,6 +1,15 @@
 {
   "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "satchels:item/satchel"
+  "base": {
+    "parent": "minecraft:item/generated",
+    "textures": {
+      "layer0": "satchels:item/satchel"
+    }
+  },
+  "loader": "neoforge:separate_transforms",
+  "perspectives": {
+    "head": {
+      "parent": "satchels:item/satchel_worn"
+    }
   }
 }

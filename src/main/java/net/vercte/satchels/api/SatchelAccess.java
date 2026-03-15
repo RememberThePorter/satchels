@@ -1,9 +1,11 @@
 package net.vercte.satchels.api;
 
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class SatchelAccess {
@@ -23,6 +25,13 @@ public class SatchelAccess {
      * </p>
      */
     public static Set<Predicate<Player>> IS_VISIBLE_PREDICATES = new HashSet<>();
+
+    /**
+     * A set of functions to get the Satchel ItemStack.
+     * This is used in SatchelLayer to render the satchel.
+     * The first function that returns a non-empty item stack is the one rendered.
+     */
+    public static Set<Function<Player, ItemStack>> SATCHEL_STACK_GETTERS = new HashSet<>();
 
     /**
      * Checks if a player can access their satchel.
@@ -46,5 +55,18 @@ public class SatchelAccess {
                 IS_VISIBLE_PREDICATES.isEmpty() ||
                 IS_VISIBLE_PREDICATES.stream().allMatch(p -> p.test(player))
         );
+    }
+
+    /**
+     * Gets the satchel to be rendered on the player.
+     * @param player The <code>Player</code> that this query concerns.
+     * @return The ItemStack that represents the rendered satchel.
+     */
+    public static ItemStack getSatchelStack(Player player) {
+        for(Function<Player, ItemStack> getter : SATCHEL_STACK_GETTERS) {
+            ItemStack stack = getter.apply(player);
+            if(!stack.isEmpty()) return stack;
+        }
+        return ItemStack.EMPTY;
     }
 }
