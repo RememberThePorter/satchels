@@ -1,0 +1,9 @@
+{
+  "item.satchels.satchel": "Sacoche",
+  "key.satchels.toggle_satchel": "Basculer la sacoche",
+  "satchels.options.offset": "Position de la sacoche",
+  "satchels.options.offset.selection": "Emplacements %s-%s",
+  "satchels.options.offset.tooltip": "La position de la sacoche sur votre barre d'action.",
+  "sound.satchels.satchel_rustle": "Sacoche bruit",
+  "tag.item.satchels.satchels": "Sachoches"
+}
